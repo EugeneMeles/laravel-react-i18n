@@ -37,7 +37,7 @@ yarn add laravel-react-i18n
 ```js
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'
-import { LaravelReactI18nProvider } from 'Modules/laraval-react-i18n'
+import { LaravelReactI18nProvider } from 'laravel-react-i18n'
 
 const el = document.getElementById('app');
 
