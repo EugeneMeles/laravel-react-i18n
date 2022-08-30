@@ -1,3 +1,3 @@
 export interface ReplacementsInterface {
-  [key: string]: string
+  [key: string]: string | number
 }
