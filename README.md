@@ -43,11 +43,15 @@ const el = document.getElementById('app');
 
 createRoot(el).render(
     <LaravelReactI18nProvider
-      lang={'en'}
-      fallbackLang={'pt'}
-      resolve={async (lang) => {
+        lang={'en'}
+        fallbackLang={'pt'}
+        resolve={async (lang) => {
         const langs = import.meta.glob('../../lang/*.json')
-        return await langs[`../../lang/${lang}.json`]()
+        const fn = langs[`/lang/${lang}.json`];
+        
+        if (typeof fn === 'function') {
+            return await fn();
+        }
     }}>
       <App/>
     </LaravelReactI18nProvider>
@@ -65,7 +69,11 @@ createRoot(el).render(
         fallbackLang={'pt'}
         resolve={async (lang) => {
             const langs = import.meta.globEager('../../lang/*.json')
-            return await langs[`../../lang/${lang}.json`]()
+            const fn = langs[`/lang/${lang}.json`];
+            
+            if (typeof fn === 'function') {
+                return await fn();
+            }
         }
     }>
         <App/>
@@ -109,7 +117,7 @@ lang/php_*.json
 
 ```jsx
 import * as React from 'react'
-import { useLaravelReactI18n } from 'laraval-react-i18n'
+import { useLaravelReactI18n } from 'laravel-react-i18n'
 
 export default function App() {
     const { t, tChoice } = useLaravelReactI18n()

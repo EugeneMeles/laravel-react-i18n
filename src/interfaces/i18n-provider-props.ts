@@ -3,5 +3,5 @@ import { OptionsInterface } from './options'
 
 export interface I18nProviderProps extends OptionsInterface {
   children?: React.ReactNode
-  hideFirstLoad?: boolean
+  awaitLangLoad?: boolean
 }

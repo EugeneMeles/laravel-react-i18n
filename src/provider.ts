@@ -24,8 +24,8 @@ const defaultOptions: OptionsInterface = {
  * Laravel React I18n Provider:
  */
 export function LaravelReactI18nProvider({
+  awaitLangLoad = isServer,
   children,
-  hideFirstLoad = true,
   ...currentOptions
 }: I18nProviderProps): JSX.Element {
   const [options, setOptions] = React.useState<OptionsInterface>({ ...defaultOptions, ...currentOptions })
@@ -257,7 +257,7 @@ export function LaravelReactI18nProvider({
     return message
   }
 
-  if (hideFirstLoad && !isLoaded(options?.lang)) {
+  if (awaitLangLoad && !isLoaded(options?.lang)) {
     return React.createElement(React.Fragment)
   }
 
