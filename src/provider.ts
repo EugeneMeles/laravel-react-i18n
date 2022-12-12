@@ -126,6 +126,8 @@ export function LaravelReactI18nProvider({
    * Get the translation for the given key and watch for any changes.
    */
   function wTrans(key: string, replacements: ReplacementsInterface = {}): string {
+    key = key.replace(/\//g, '.')
+
     if (!activeMessages[key]) {
       activeMessages[key] = key
     }
