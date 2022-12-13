@@ -1,3 +1,0 @@
-it('create some test', () => {
-//
-});

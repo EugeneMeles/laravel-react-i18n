@@ -39,7 +39,7 @@ mix.extend(
       if (hasPhpTranslations(this.langPath)) {
         config.plugins.push(
           new EnvironmentPlugin({
-            LARAVEL_VUE_I18N_HAS_PHP: true
+            VITE_LARAVEL_REACT_I18N_HAS_PHP: true
           })
         )
       }
