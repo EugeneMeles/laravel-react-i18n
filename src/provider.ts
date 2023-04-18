@@ -174,14 +174,15 @@ export function LaravelReactI18nProvider({
     const am = {}
     for (const [key, value] of Object.entries(messages)) {
       am[key] = value
-      setActiveMessages({ ...activeMessages, ...am })
     }
 
     for (const [key] of Object.entries(am)) {
       if (!messages[key]) {
-        setActiveMessages({ ...activeMessages, [key]: null })
+        am[key] = null;
       }
     }
+
+    setActiveMessages({ ...activeMessages, ...am })
 
     return lang
   }
