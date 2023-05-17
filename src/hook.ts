@@ -1,4 +1,9 @@
-import * as React from 'react'
-import { Context } from './context'
+import { useContext } from 'react';
 
-export const useLaravelReactI18n = () => React.useContext(Context)
+import { Context } from './context';
+
+import ContextInterface from './interfaces/context';
+
+export default function useLaravelReactI18n<T extends string = string>() {
+  return useContext<ContextInterface<T>>(Context);
+}

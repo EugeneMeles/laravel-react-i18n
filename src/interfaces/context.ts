@@ -1,9 +1,14 @@
-import { ReplacementsInterface } from './replacements'
+import ReplacementsInterface from './replacements';
 
-export interface ContextInterface {
-  t?: (key: string, replacements?: ReplacementsInterface) => string
-  tChoice?: (key: string, number: number, replacements?: ReplacementsInterface) => string
-  setLang?: (lang: string) => void
-  isLoaded?: (lang?: string) => boolean
-  getActiveLanguage?: () => string
+/**
+ *
+ */
+export default interface ContextInterface<T extends string = any> {
+  currentLocale: () => string;
+  getLocales: () => string[];
+  isLocale: (locale: string) => boolean;
+  loading: boolean;
+  setLocale: (locale: string) => void;
+  t: (key: T, replacements?: ReplacementsInterface) => string;
+  tChoice: (key: T, number: number, replacements?: ReplacementsInterface) => string;
 }

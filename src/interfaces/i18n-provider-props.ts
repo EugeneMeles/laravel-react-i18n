@@ -1,7 +1,11 @@
-import * as React from 'react'
-import { OptionsInterface } from './options'
+import { ReactNode } from 'react';
 
-export interface I18nProviderProps extends OptionsInterface {
-  children?: React.ReactNode
-  awaitLangLoad?: boolean
+import OptionsInterface from './options';
+
+/**
+ *
+ */
+export default interface I18nProviderProps extends OptionsInterface {
+  children: ReactNode;
+  ssr?: boolean;
 }

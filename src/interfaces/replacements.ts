@@ -1,3 +1,6 @@
-export interface ReplacementsInterface {
-  [key: string]: string | number
+/**
+ *
+ */
+export default interface ReplacementsInterface {
+  [key: string]: string | number;
 }

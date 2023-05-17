@@ -1,52 +1,137 @@
-import { existsSync, unlinkSync } from 'fs'
-import { parseAll, hasPhpTranslations } from './loader'
+import fs from 'fs';
 
-export default function i18n(langPath: string = 'lang') {
-  let files: { name: string; path: string }[] = []
-  let exitHandlersBound: boolean = false
+import { createLogger } from 'vite';
 
-  const clean = () => {
-    files.forEach((file) => unlinkSync(file.path))
+import { convertToKeyType, saveKeyTypeToFile } from './plugin/key-type';
+import parser from './plugin/parser';
+import locale from './plugin/locale';
 
-    files = []
+interface ConfigInterface {
+  langDirname?: string;
+  typeDestinationPath?: string;
+  typeTranslationKeys?: boolean;
+}
+
+/**
+ *
+ */
+export default function i18n(config?: ConfigInterface) {
+  const langDirname = config?.langDirname ? config.langDirname : 'lang';
+
+  const logger = createLogger('info', { prefix: '[laravel-react-i18n]' });
+
+  let isPhpLocale = false;
+  let files: { path: string; basename: string }[] = [];
+  let exitHandlersBound = false;
+  let jsonLocales: string[] = [];
+  let phpLocales: string[] = [];
+
+  function clean() {
+    files.forEach((file) => fs.existsSync(file.path) && fs.unlinkSync(file.path));
+    files = [];
+  }
+
+  function pushKeys(keys: string[], locales: string[]) {
+    if (
+      typeof process.env.VITE_LARAVEL_REACT_I18N_LOCALE !== 'undefined' &&
+      locales.includes(process.env.VITE_LARAVEL_REACT_I18N_LOCALE)
+    ) {
+      const fileName = isPhpLocale
+        ? `php_${process.env.VITE_LARAVEL_REACT_I18N_LOCALE}`
+        : process.env.VITE_LARAVEL_REACT_I18N_LOCALE;
+      keys.push(convertToKeyType(langDirname, fileName));
+    }
+
+    if (
+      typeof process.env.VITE_LARAVEL_REACT_I18N_FALLBACK_LOCALE !== 'undefined' &&
+      locales.includes(process.env.VITE_LARAVEL_REACT_I18N_FALLBACK_LOCALE) &&
+      process.env.VITE_LARAVEL_REACT_I18N_LOCALE !== process.env.VITE_LARAVEL_REACT_I18N_FALLBACK_LOCALE
+    ) {
+      const fileName = isPhpLocale
+        ? `php_${process.env.VITE_LARAVEL_REACT_I18N_FALLBACK_LOCALE}`
+        : process.env.VITE_LARAVEL_REACT_I18N_FALLBACK_LOCALE;
+      keys.push(convertToKeyType(langDirname, fileName));
+    }
   }
 
   return {
     name: 'i18n',
     enforce: 'post',
-    config(config) {
-      if (!hasPhpTranslations(langPath)) {
-        return
+    config() {
+      const keys: string[] = [];
+
+      // Check language directory is exists.
+      if (!fs.existsSync(langDirname)) {
+        const msg = [
+          'Language directory is not exist, maybe you did not publish the language files with `php artisan lang:publish`.',
+          'For more information please visit: https://laravel.com/docs/10.x/localization#publishing-the-language-files'
+        ];
+
+        msg.map((str) => logger.error(str, { timestamp: true }));
+        return;
       }
 
-      files = parseAll(langPath)
+      // JSON-file locales.
+      jsonLocales = locale.getJsonLocale(langDirname);
 
-      /** @ts-ignore */
-      process.env.VITE_LARAVEL_REACT_I18N_HAS_PHP = true
+      if (config?.typeTranslationKeys) {
+        pushKeys(keys, jsonLocales);
+      }
 
-      return {
-        define: {
-          'process.env.LARAVEL_REACT_I18N_HAS_PHP': true
+      // PHP-file locales.
+      phpLocales = locale.getPhpLocale(langDirname);
+
+      if (phpLocales.length > 0) {
+        files = parser(langDirname);
+        isPhpLocale = true;
+
+        if (config?.typeTranslationKeys) {
+          pushKeys(keys, phpLocales);
         }
+      } else {
+        const msg = [
+          'Language directory not contain php translations files.',
+          'For more information please visit: https://laravel.com/docs/10.x/localization#introduction'
+        ];
+
+        msg.map((str) => logger.info(str, { timestamp: true }));
+      }
+
+      if (config?.typeTranslationKeys) {
+        saveKeyTypeToFile(keys.join('|'), config?.typeDestinationPath);
       }
     },
     buildEnd: clean,
-    handleHotUpdate(ctx) {
-      if (/lang\/.*\.php$/.test(ctx.file)) {
-        files = parseAll(langPath)
+    handleHotUpdate(ctx: any) {
+      const keys: string[] = [];
+
+      if (config?.typeTranslationKeys) {
+        pushKeys(keys, jsonLocales);
+      }
+
+      if (isPhpLocale) {
+        if (/lang\/.*\.php$/.test(ctx.file)) {
+          files = parser(langDirname);
+        }
+
+        if (config?.typeTranslationKeys) {
+          pushKeys(keys, phpLocales);
+        }
+      }
+
+      if (config?.typeTranslationKeys) {
+        saveKeyTypeToFile(keys.join('|'), config?.typeDestinationPath);
       }
     },
-    configureServer(server) {
-      if (exitHandlersBound) {
-        return
-      }
+    configureServer() {
+      if (exitHandlersBound) return;
 
-      process.on('exit', clean)
-      process.on('SIGINT', process.exit)
-      process.on('SIGTERM', process.exit)
-      process.on('SIGHUP', process.exit)
+      process.on('exit', clean);
+      process.on('SIGINT', process.exit);
+      process.on('SIGTERM', process.exit);
+      process.on('SIGHUP', process.exit);
 
-      exitHandlersBound = true
+      exitHandlersBound = true;
     }
-  }
+  };
 }
