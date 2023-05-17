@@ -16,6 +16,7 @@
 
 ## Requirements
 - Laravel >= 9
+- NodeJS >= 16
 - Vite
 
 ## Installation
@@ -285,7 +286,7 @@ isLocale('fr'); // false
 The `loading` show current loading state, only on client side where you change the locale.
 
 ```tsx
-const { loading, setLocale } = useLaravelReactI18n();
+const { loading, currentLocale, setLocale } = useLaravelReactI18n();
 
 function handler() {
     setLocale('it')
