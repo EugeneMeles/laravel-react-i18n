@@ -1,25 +1,7 @@
 {
+  "extends": "./tsconfig.client.json",
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "declaration": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipDefaultLibCheck": true,
+    "module": "CommonJS",
     "outDir": "dist/cjs"
-  },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src/vite.ts",
-    "src/mix.ts",
-    "src/loader.ts"
-  ],
-  "rules": {
-    "no-console": false
   }
 }

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "exclude": [
+    "node_modules",
+    "src/plugin/*.ts",
+    "src/vite.ts"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ]
+}

@@ -1,4 +1,13 @@
-import * as React from 'react'
-import { ContextInterface } from './interfaces/context'
+import { createContext } from 'react';
 
-export const Context = React.createContext<ContextInterface>({})
+import ContextInterface from './interfaces/context';
+
+export const Context = createContext<ContextInterface>({
+  t: (key) => '',
+  tChoice: (key) => '',
+  currentLocale: () => '',
+  getLocales: () => [''],
+  isLocale: (locale) => true,
+  loading: true,
+  setLocale: (locale) => {}
+});

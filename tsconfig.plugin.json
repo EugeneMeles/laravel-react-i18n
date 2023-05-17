@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "outDir": "dist"
+  },
+  "include": [
+    "src/@types/*.d.ts",
+    "src/plugin/*.ts",
+    "src/vite.ts"
+  ]
+}

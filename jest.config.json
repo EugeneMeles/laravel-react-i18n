@@ -1,0 +1,5 @@
+{
+  "testEnvironment": "jsdom",
+  "setupFilesAfterEnv": ["<rootDir>/__tests__/jest-setup.ts"],
+  "testPathIgnorePatterns": ["jest-setup.ts", "__mocks__"]
+}
