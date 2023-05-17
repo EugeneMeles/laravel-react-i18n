@@ -13,10 +13,10 @@
     "i18n",
     "inertiajs"
   ],
-  "engines" : { 
+  "engines" : {
     "npm" : ">=9.0.0",
     "node" : ">=16.0.0"
-  }
+  },
   "repository": "https://github.com/EugeneMeles/laravel-react-i18n",
   "license": "MIT",
   "description": "Allows to connect your `Laravel` Framework localization files with `React`.",
