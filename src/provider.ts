@@ -12,6 +12,11 @@ import DefaultOptionsInterface from './interfaces/default-options';
 import ReplacementsInterface from './interfaces/replacements';
 
 /**
+ *
+ */
+const isServer = typeof window === 'undefined';
+
+/**
  * Map object for translations.
  */
 const translation = new Map();
@@ -37,15 +42,9 @@ const defaultOptions: DefaultOptionsInterface = {
  */
 export default function LaravelReactI18nProvider({ children, ssr, ...currentOptions }: I18nProviderProps) {
   const [isFirstRender, setIsFirstRender] = useState<boolean>(true);
-  const [isServer, setIsServer] = useState<boolean>(typeof ssr !== 'undefined' ? ssr : typeof window === 'undefined');
-  const [loading, setLoading] = useState<boolean>(typeof ssr !== 'undefined');
+  const [loading, setLoading] = useState<boolean>(!isServer);
   const [options, setOptions] = useState<DefaultOptionsInterface>({ ...defaultOptions, ...currentOptions });
   const { getLocales, isLocale } = recognizer(options.files);
-
-  useEffect(() => {
-    if (ssr) return;
-    setIsServer(false);
-  }, []);
 
   useEffect(() => {
     const { locale, fallbackLocale } = options;

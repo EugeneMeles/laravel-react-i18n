@@ -1,6 +1,6 @@
 {
   "name": "laravel-react-i18n",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": {
     "name": "Eugene Meles",
     "email": "xmelesx@gmail.com"
@@ -30,6 +30,7 @@
     "build:client": "tsc -p tsconfig.client.json",
     "build:commonjs": "tsc -p tsconfig.commonjs.json",
     "build:plugin": "tsc -p tsconfig.plugin.json",
+    "prepare": "npm run build",
     "postpublish": "PACKAGE_VERSION=$(cat package.json | grep \\\"version\\\" | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]') && git tag v$PACKAGE_VERSION && git push --tags"
   },
   "devDependencies": {
