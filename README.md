@@ -14,6 +14,9 @@
     files with <b>React</b>. It uses the same logic used on <a href="https://laravel.com/docs/8.x/localization">Laravel Localization</a>.
 </p>
 
+## Demo
+[laravel-react-i18n-playground](https://github.com/EugeneMeles/laravel-react-i18n-playground)
+
 ## Requirements
 - Laravel >= 9
 - NodeJS >= 16
