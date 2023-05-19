@@ -1,3 +1,6 @@
 coverage
 dist
-test
+__tests__
+/.fleet
+/.idea
+/.vscode
