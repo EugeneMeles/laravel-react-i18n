@@ -1,15 +1,13 @@
-import { createElement, Fragment, useEffect, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 
 import { Context } from './context';
-
-import recognizer from './utils/recognizer';
+import type DefaultOptionsInterface from './interfaces/default-options';
+import type I18nProviderProps from './interfaces/i18n-provider-props';
+import type ReplacementsInterface from './interfaces/replacements';
 import pluralization from './utils/pluralization';
+import recognizer from './utils/recognizer';
 import replacer from './utils/replacer';
 import resolver from './utils/resolver';
-
-import I18nProviderProps from './interfaces/i18n-provider-props';
-import DefaultOptionsInterface from './interfaces/default-options';
-import ReplacementsInterface from './interfaces/replacements';
 
 /**
  *
@@ -43,22 +41,57 @@ const defaultOptions: DefaultOptionsInterface = {
 export default function LaravelReactI18nProvider({ children, ssr, ...currentOptions }: I18nProviderProps) {
   const [isFirstRender, setIsFirstRender] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(!isServer);
-  const [options, setOptions] = useState<DefaultOptionsInterface>({ ...defaultOptions, ...currentOptions });
+  const [options, setOptions] = useState<DefaultOptionsInterface>({
+    ...defaultOptions,
+    ...currentOptions
+  });
   const { getLocales, isLocale } = recognizer(options.files);
 
-  useEffect(() => {
-    const { locale, fallbackLocale } = options;
+  // Determine if files are eagerly loaded.
+  const filesAreEagerlyLoaded = Object.values(options.files).every(
+    (value) => typeof value === 'object' && value !== null
+  );
 
-    if (!translation.get(locale)) fetchLocaleClient(locale);
-    if (locale !== fallbackLocale && !translation.get(fallbackLocale)) fetchLocaleClient(fallbackLocale);
+  const { locale, fallbackLocale } = options;
+
+  if (!translation.get(locale)) {
+    if (filesAreEagerlyLoaded) {
+      fetchLocaleSync(locale);
+    } else if (isServer) {
+      fetchLocaleServer(locale);
+    }
+  }
+
+  if (locale !== fallbackLocale && !translation.get(fallbackLocale)) {
+    if (filesAreEagerlyLoaded) {
+      fetchLocaleSync(fallbackLocale);
+    } else if (isServer) {
+      fetchLocaleServer(fallbackLocale);
+    }
+  }
+
+  useEffect(() => {
+    if (!filesAreEagerlyLoaded) {
+      if (!translation.get(locale)) fetchLocaleClient(locale);
+      if (locale !== fallbackLocale && !translation.get(fallbackLocale)) fetchLocaleClient(fallbackLocale);
+    }
   }, [options.locale]);
+
+  function fetchLocaleSync(givenLocale: string): void {
+    const responses = resolver(options.files, givenLocale);
+
+    for (const response of responses) {
+      translation.set(givenLocale, {
+        ...(translation.get(givenLocale) || {}),
+        ...response.default
+      });
+    }
+  }
 
   /**
    * Initialise translations for server.
    */
   if (isServer) {
-    const { locale, fallbackLocale } = options;
-
     if (!translation.get(locale)) fetchLocaleServer(locale);
     if (locale !== fallbackLocale && !translation.get(fallbackLocale)) fetchLocaleServer(fallbackLocale);
   }
@@ -66,18 +99,18 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
   /**
    * Fetching locale for client side.
    */
-  function fetchLocaleClient(locale: string): void {
-    const promises = resolver(options.files, locale);
+  function fetchLocaleClient(givenLocale: string): void {
+    const promises = resolver(options.files, givenLocale);
 
     setLoading(true);
     Promise.all(promises)
       .then((responses) => {
-        responses.forEach((response) => {
-          translation.set(locale, {
-            ...(translation.get(locale) || {}),
+        for (const response of responses) {
+          translation.set(givenLocale, {
+            ...(translation.get(givenLocale) || {}),
             ...response.default
           });
-        });
+        }
       })
       .then(() => {
         if (isFirstRender) setIsFirstRender(false);
@@ -88,22 +121,22 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
   /**
    * Fetching locale for server side.
    */
-  function fetchLocaleServer(locale: string): void {
-    const responses = resolver(options.files, locale);
+  function fetchLocaleServer(givenLocale: string): void {
+    const responses = resolver(options.files, givenLocale);
 
-    responses.forEach((response) => {
-      translation.set(locale, {
-        ...(translation.get(locale) || {}),
+    for (const response of responses) {
+      translation.set(givenLocale, {
+        ...(translation.get(givenLocale) || {}),
         ...response.default
       });
-    });
+    }
   }
 
   /**
    * Get the translation for the given key.
    */
   function t(key: string, replacements: ReplacementsInterface = {}): string {
-    const { locale, fallbackLocale, prevLocale } = options;
+    const { prevLocale } = options;
 
     let message = translation.get(fallbackLocale)?.[key] ? translation.get(fallbackLocale)[key] : key;
 
@@ -125,23 +158,26 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
    */
   function tChoice(key: string, number: number, replacements: ReplacementsInterface = {}): string {
     const message = t(key, replacements);
-    const locale = isLocale(options.locale) ? options.locale : options.fallbackLocale;
+    const computedLocale = isLocale(options.locale) ? options.locale : options.fallbackLocale;
 
-    return replacer(pluralization(message, number, locale), { ...replacements, count: number.toString() });
+    return replacer(pluralization(message, number, computedLocale), {
+      ...replacements,
+      count: number.toString()
+    });
   }
 
   /**
    * Set locale.
    */
-  function setLocale(locale: string) {
+  function setLocale(givenLocale: string) {
     if (!isServer) {
       // When setting the HTML lang attribute, hyphen must be use instead of underscore.
-      document.documentElement.setAttribute('lang', locale.replace('_', '-'));
+      document.documentElement.setAttribute('lang', givenLocale.replace('_', '-'));
     }
 
     setOptions((prevState) => ({
       ...options,
-      locale,
+      locale: givenLocale,
       prevLocale: prevState.locale
     }));
   }
@@ -151,10 +187,6 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
    */
   function currentLocale(): string {
     return options.locale || options.fallbackLocale;
-  }
-
-  if (!isServer && isFirstRender) {
-    return createElement(Fragment);
   }
 
   return createElement(
