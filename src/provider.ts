@@ -77,12 +77,12 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
     }
   }, [options.locale]);
 
-  function fetchLocaleSync(givenLocale: string): void {
-    const responses = resolver(options.files, givenLocale);
+  function fetchLocaleSync(locale: string): void {
+    const responses = resolver(options.files, locale);
 
     for (const response of responses) {
-      translation.set(givenLocale, {
-        ...(translation.get(givenLocale) || {}),
+      translation.set(locale, {
+        ...(translation.get(locale) || {}),
         ...response.default
       });
     }
@@ -92,6 +92,8 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
    * Initialise translations for server.
    */
   if (isServer) {
+    const { locale, fallbackLocale } = options;
+
     if (!translation.get(locale)) fetchLocaleServer(locale);
     if (locale !== fallbackLocale && !translation.get(fallbackLocale)) fetchLocaleServer(fallbackLocale);
   }
@@ -99,15 +101,15 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
   /**
    * Fetching locale for client side.
    */
-  function fetchLocaleClient(givenLocale: string): void {
-    const promises = resolver(options.files, givenLocale);
+  function fetchLocaleClient(locale: string): void {
+    const promises = resolver(options.files, locale);
 
     setLoading(true);
     Promise.all(promises)
       .then((responses) => {
         for (const response of responses) {
-          translation.set(givenLocale, {
-            ...(translation.get(givenLocale) || {}),
+          translation.set(locale, {
+            ...(translation.get(locale) || {}),
             ...response.default
           });
         }
@@ -121,12 +123,12 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
   /**
    * Fetching locale for server side.
    */
-  function fetchLocaleServer(givenLocale: string): void {
-    const responses = resolver(options.files, givenLocale);
+  function fetchLocaleServer(locale: string): void {
+    const responses = resolver(options.files, locale);
 
     for (const response of responses) {
-      translation.set(givenLocale, {
-        ...(translation.get(givenLocale) || {}),
+      translation.set(locale, {
+        ...(translation.get(locale) || {}),
         ...response.default
       });
     }
@@ -136,7 +138,7 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
    * Get the translation for the given key.
    */
   function t(key: string, replacements: ReplacementsInterface = {}): string {
-    const { prevLocale } = options;
+    const { locale, fallbackLocale, prevLocale } = options;
 
     let message = translation.get(fallbackLocale)?.[key] ? translation.get(fallbackLocale)[key] : key;
 
@@ -158,9 +160,9 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
    */
   function tChoice(key: string, number: number, replacements: ReplacementsInterface = {}): string {
     const message = t(key, replacements);
-    const computedLocale = isLocale(options.locale) ? options.locale : options.fallbackLocale;
+    const locale = isLocale(options.locale) ? options.locale : options.fallbackLocale;
 
-    return replacer(pluralization(message, number, computedLocale), {
+    return replacer(pluralization(message, number, locale), {
       ...replacements,
       count: number.toString()
     });
@@ -169,15 +171,15 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
   /**
    * Set locale.
    */
-  function setLocale(givenLocale: string) {
+  function setLocale(locale: string) {
     if (!isServer) {
       // When setting the HTML lang attribute, hyphen must be use instead of underscore.
-      document.documentElement.setAttribute('lang', givenLocale.replace('_', '-'));
+      document.documentElement.setAttribute('lang', locale.replace('_', '-'));
     }
 
     setOptions((prevState) => ({
       ...options,
-      locale: givenLocale,
+      locale,
       prevLocale: prevState.locale
     }));
   }

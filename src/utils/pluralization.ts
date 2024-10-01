@@ -18,11 +18,7 @@ export default function pluralization(message: string, number: number, locale: s
   segments = stripConditions(segments);
   const pluralIndex = getPluralIndex(locale, number);
 
-  if (segments.length === 1 || !segments[pluralIndex]) {
-    return segments[0];
-  }
-
-  return segments[pluralIndex];
+  return segments.length === 1 || !segments[pluralIndex] ? segments[0] : segments[pluralIndex];
 }
 
 /**
@@ -49,28 +45,17 @@ function extract(segments: string[], number: number): string | null {
  * @param number
  */
 function extractFromString(part: string, number: number): string | null {
-  const matches = part.match(/^[{[]([^[\]{}]*)[}\]](.*)/s) || [];
+  const matches = part.match(/^[{[]([^,{}\[\]]*),?([^{}\[\]]*)[}\]]([\s\S]*)/);
 
-  if (!matches?.[1] && !matches?.[2]) {
-    return null;
+  if (!matches) return null;
+
+  const [, from, to, value] = matches;
+
+  if ((from === '*' || number >= parseFloat(from)) && (to === '*' || number <= parseFloat(to))) {
+    return value;
   }
 
-  const condition = matches[1];
-  const value = matches[2];
-
-  if (condition.includes(',')) {
-    const [from, to] = condition.split(',');
-
-    if (
-      (to === '*' && number >= parseFloat(from)) ||
-      (from === '*' && number <= parseFloat(to)) ||
-      (number >= parseFloat(from) && number <= parseFloat(to))
-    ) {
-      return value;
-    }
-  }
-
-  return parseFloat(condition) === number ? value : null;
+  return from && parseFloat(from) === number ? value : null;
 }
 
 /**
