@@ -7,14 +7,15 @@ import ReplacementsInterface from '../interfaces/replacements';
  * @param replacements
  */
 export default function replacer(message: string, replacements?: ReplacementsInterface): string {
-  Object.entries(replacements || []).forEach(([key, value]) => {
-    message = message
-      .replaceAll(`:${key}`, value.toString())
-      .replaceAll(`:${key.toUpperCase()}`, value.toString().toUpperCase())
-      .replaceAll(`:${capitalize(key)}`, capitalize(value.toString()));
-  });
+  if (!replacements) return message;
 
-  return message;
+  const patterns = Object.entries(replacements).flatMap(([key, value]) => [
+    { pattern: new RegExp(`:${key}`, 'g'), replacement: value.toString() },
+    { pattern: new RegExp(`:${key.toUpperCase()}`, 'g'), replacement: value.toString().toUpperCase() },
+    { pattern: new RegExp(`:${capitalize(key)}`, 'g'), replacement: capitalize(value.toString()) }
+  ]);
+
+  return patterns.reduce((result, { pattern, replacement }) => result.replace(pattern, replacement), message);
 }
 
 /**
@@ -22,6 +23,6 @@ export default function replacer(message: string, replacements?: ReplacementsInt
  *
  * @param str
  */
-function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function capitalize(str: string): string {
+  return str ? str[0].toUpperCase() + str.slice(1) : '';
 }

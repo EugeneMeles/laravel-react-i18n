@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 import { dirnameSanitize } from './helper';
 
@@ -8,36 +9,43 @@ export default {
    * @param dirname
    */
   getJsonLocale: (dirname: string): string[] => {
-    dirname = dirnameSanitize(dirname);
+    const sanitizedDirname = dirnameSanitize(dirname);
 
-    if (!fs.existsSync(dirname)) {
-      // console.error(`No such directory: '${dirname}'`);
+    if (!fs.existsSync(sanitizedDirname)) {
       return [];
     }
 
     return fs
-      .readdirSync(dirname)
-      .filter((basename) => fs.statSync(dirname + basename).isFile())
-      .filter((basename) => !/^php_/.test(basename))
-      .map((basename) => basename.replace('.json', ''))
+      .readdirSync(sanitizedDirname)
+      .filter((basename) => {
+        const fullPath = path.join(sanitizedDirname, basename);
+        return fs.statSync(fullPath).isFile() && !basename.startsWith('php_');
+      })
+      .map((basename) => basename.replace(/\.json$/, ''))
       .sort();
   },
+
   /**
    *
    * @param dirname
    */
   getPhpLocale: (dirname: string): string[] => {
-    dirname = dirnameSanitize(dirname);
+    const sanitizedDirname = dirnameSanitize(dirname);
 
-    if (!fs.existsSync(dirname)) {
-      // console.error(`No such directory: '${dirname}'`);
+    if (!fs.existsSync(sanitizedDirname)) {
       return [];
     }
 
     return fs
-      .readdirSync(dirname)
-      .filter((basename) => fs.statSync(dirname + basename).isDirectory())
-      .filter((folder) => fs.readdirSync(dirname + folder).filter((basename) => /\.php$/.test(basename)).length > 0)
+      .readdirSync(sanitizedDirname)
+      .filter((folder) => {
+        const fullPath = path.join(sanitizedDirname, folder);
+        return fs.statSync(fullPath).isDirectory();
+      })
+      .filter((folder) => {
+        const phpFiles = fs.readdirSync(path.join(sanitizedDirname, folder));
+        return phpFiles.some((basename) => /\.php$/.test(basename));
+      })
       .sort();
   }
 };

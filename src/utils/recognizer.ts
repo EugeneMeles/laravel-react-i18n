@@ -3,68 +3,36 @@
  * @param files
  */
 export default function recognizer(files: Record<string, unknown> | Record<string, () => Promise<unknown>>) {
-  const jsonLocales: string[] = [];
-  const phpLocales: string[] = [];
+  const jsonLocales = new Set<string>();
+  const phpLocales = new Set<string>();
   const jsonFileLocales: Record<string, string> = {};
   const phpFileLocales: Record<string, string> = {};
 
-  Object.keys(files).map((file) => {
-    const match = file.match(/(.*)\/(.*).json$/) || [];
+  Object.keys(files).forEach((file) => {
+    const match = file.match(/.*\/(php_)?(.*)\.json$/);
+    if (match) {
+      const [, isPhp, locale] = match;
 
-    if (match?.[0] && match?.[2]) {
-      if (match[2].match(/php_/)) {
-        const locale = match[2].replace('php_', '');
-        phpLocales.push(locale);
-        phpLocales.sort();
-        phpFileLocales[locale] = match[0];
+      if (isPhp) {
+        phpLocales.add(locale);
+        phpFileLocales[locale] = file;
       } else {
-        const locale = match[2];
-        jsonLocales.push(locale);
-        jsonLocales.sort();
-        jsonFileLocales[locale] = match[0];
+        jsonLocales.add(locale);
+        jsonFileLocales[locale] = file;
       }
     }
   });
 
-  const locales = [...jsonLocales, ...phpLocales]
-    .filter((locale, index, array) => array.indexOf(locale) === index)
-    .sort();
+  const locales = Array.from(new Set([...jsonLocales, ...phpLocales])).sort();
 
   return {
-    /**
-     *
-     * @param locale
-     */
     isLocale: (locale: string): boolean => locales.includes(locale),
-    /**
-     *
-     */
     getLocales: () => locales,
-    /**
-     *
-     * @param locale
-     */
-    isJsonLocale: (locale: string): boolean => jsonLocales.includes(locale),
-    /**
-     *
-     */
-    getJsonLocales: () => jsonLocales,
-    /**
-     *
-     * @param locale
-     */
-    isPhpLocale: (locale: string): boolean => phpLocales.includes(locale),
-    /**
-     *
-     */
-    getPhpLocales: () => phpLocales,
-    /**
-     *
-     */
-    getJsonFile: (locale: string): string => jsonFileLocales?.[locale],
-    /**
-     *
-     */
-    getPhpFile: (locale: string): string => phpFileLocales?.[locale]
+    isJsonLocale: (locale: string): boolean => jsonLocales.has(locale),
+    getJsonLocales: () => Array.from(jsonLocales).sort(),
+    isPhpLocale: (locale: string): boolean => phpLocales.has(locale),
+    getPhpLocales: () => Array.from(phpLocales).sort(),
+    getJsonFile: (locale: string): string => jsonFileLocales[locale],
+    getPhpFile: (locale: string): string => phpFileLocales[locale]
   };
 }
