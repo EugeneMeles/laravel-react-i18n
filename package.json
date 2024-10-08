@@ -15,7 +15,7 @@
   ],
   "engines": {
     "npm": ">=9.0.0",
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "repository": "https://github.com/EugeneMeles/laravel-react-i18n",
   "license": "MIT",
@@ -23,6 +23,7 @@
   "main": "dist/cjs/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "prettier": "prettier -c \"src/**/*.(ts|tsx)\" --write",
@@ -57,7 +58,7 @@
     "jest-environment-jsdom": "^29.5.0",
     "prettier": "^2.8.8",
     "typescript": "^5.0.4",
-    "vite": "^4.3.5"
+    "vite": "^5.4.8"
   },
   "dependencies": {
     "php-array-reader": "^2.1.2",

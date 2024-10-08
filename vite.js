@@ -1,3 +1,3 @@
-"use strict";
-var i18n = require('./dist/vite');
-module.exports = typeof i18n['default'] !== undefined ? i18n['default'] : i18n;
+'use strict';
+import i18n from './dist/vite';
+module.exports = typeof i18n.default !== undefined ? i18n.default : i18n;
