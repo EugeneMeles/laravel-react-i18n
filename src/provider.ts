@@ -1,4 +1,4 @@
-import { createElement, useEffect, useState } from 'react';
+import { createElement, ReactNode, useEffect, useState } from 'react';
 
 import { Context } from './context';
 import type DefaultOptionsInterface from './interfaces/default-options';
@@ -135,11 +135,10 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
   }
 
   /**
-   * Get the translation for the given key.
+   * Get the raw translation for the given key (with no placeholders).
    */
-  function t(key: string, replacements: ReplacementsInterface = {}): string {
+  function _translate(key: string) {
     const { locale, fallbackLocale, prevLocale } = options;
-
     let message = translation.get(fallbackLocale)?.[key] ? translation.get(fallbackLocale)[key] : key;
 
     if (isLocale(locale)) {
@@ -151,6 +150,14 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
         message = translation.get(fallbackLocale)[key];
       }
     }
+    return message;
+  }
+
+  /**
+   * Get the translation for the given key.
+   */
+  function t(key: string, replacements: ReplacementsInterface = {}): ReactNode {
+    const message = _translate(key);
 
     return replacer(message, replacements);
   }
@@ -158,13 +165,13 @@ export default function LaravelReactI18nProvider({ children, ssr, ...currentOpti
   /**
    * Translates the given message based on a count.
    */
-  function tChoice(key: string, number: number, replacements: ReplacementsInterface = {}): string {
-    const message = t(key, replacements);
+  function tChoice(key: string, number: number, replacements: ReplacementsInterface = {}): ReactNode {
+    const message = _translate(key);
     const locale = isLocale(options.locale) ? options.locale : options.fallbackLocale;
 
     return replacer(pluralization(message, number, locale), {
+      count: number.toString(),
       ...replacements,
-      count: number.toString()
     });
   }
 

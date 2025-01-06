@@ -178,7 +178,7 @@ export default function Component() {
 
 ### `t(key: string, replacements?: {[key: string]: string | number})`
 
-The `t()` method can translate a given message.
+The `t()` method can translate a given message into an array.
 
 `lang/pt.json:`
 ```json
@@ -193,10 +193,12 @@ The `t()` method can translate a given message.
 ...
 const { t } = useLaravelReactI18n();
 
-t('Welcome!'); // Bem-vindo!
-t('Welcome, :name!', { name: 'Francisco' }); // Bem-vindo Francisco!
-t('Welcome, :NAME!', { name: 'Francisco' }); // Bem-vindo FRANCISCO!
-t('Some untranslated'); // Some untranslated
+t('Welcome!'); // ["Bem-vindo!"]
+t('Welcome, :name!', { name: 'Francisco' }); // ["Bem-vindo, ", "Francisco", "!"]
+t('Welcome, :name!', { name: <a href="#">Francisco</a> }); // ["Bem-vindo, ", <a href="#">Francisco</a>, "!"]
+t('Welcome, :NAME!', { name: <a href="#">Francisco</a> }); // ["Bem-vindo, ", <a href="#">Francisco</a>, "!"]
+t('Welcome, :NAME!', { name: 'Francisco' }); // ["Bem-vindo, ", "FRANCISCO", "!"]
+t('Some untranslated'); // ["Some untranslated"]
 ...
 ```
 
